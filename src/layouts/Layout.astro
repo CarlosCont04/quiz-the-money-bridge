@@ -1,0 +1,21 @@
+---
+import '../styles/global.css';
+import { getImage } from 'astro:assets';
+import brandMark from '../assets/brand-mark.webp';
+const favicon = await getImage({ src: brandMark, width: 48 });
+---
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Descubre qué tan sólidas están tus finanzas con el quiz de Deyanira Mariscal, CEO de The Money Bridge. 12 preguntas para conocer tu punto de partida." />
+    <meta name="theme-color" content="#19255b" />
+    <meta property="og:title" content="¿Realmente estás usando bien tu dinero? | The Money Bridge" />
+    <meta property="og:description" content="12 preguntas. Un panorama más claro de tus finanzas. Descubre tu semáforo financiero." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/webp" href={favicon.src} />
+    <title>Tu semáforo financiero | The Money Bridge</title>
+  </head>
+  <body><a href="#contenido" class="skip-link">Saltar al contenido</a><slot /></body>
+</html>

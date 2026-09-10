@@ -1,0 +1,7 @@
+---
+import Icon from './Icon.astro';
+import { Image } from 'astro:assets';
+import portrait from '../assets/deyanira.webp';
+---
+<section class="author-section" id="deyanira" aria-labelledby="author-title"><div class="container author-inner"><Image src={portrait} alt="" width={150} loading="lazy" /><div><p class="eyebrow">CREADO POR DEYANIRA MARISCAL</p><h2 id="author-title">Un puente entre tu dinero y tus metas.</h2><p>CEO de The Money Bridge · Educación financiera para tomar mejores decisiones.</p></div><a href="mailto:contacto@themoneybridge.com.mx" class="author-link">Hablemos de tus metas <Icon name="arrow" size={18} /></a></div></section>
+<footer class="site-footer"><div class="container footer-inner"><p>© {new Date().getFullYear()} The Money Bridge</p><span>Claridad hoy. Tranquilidad mañana.</span><button class="text-button" type="button" data-open-privacy>Uso de datos</button></div></footer>

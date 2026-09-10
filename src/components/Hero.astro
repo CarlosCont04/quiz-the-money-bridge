@@ -1,0 +1,23 @@
+---
+import Icon from './Icon.astro';
+import { Image } from 'astro:assets';
+import portrait from '../assets/deyanira.webp';
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="small-dot"></span> TU PUNTO DE PARTIDA FINANCIERO</p>
+      <h1 id="hero-title">¿Realmente estás<br class="desktop-break" /> usando bien<br /> <span>tu dinero?</span></h1>
+      <p class="hero-lead">Trabajas todos los meses para ganar dinero.<br class="desktop-break" /> La pregunta es: ¿qué está haciendo ese dinero por ti?</p>
+      <p class="hero-description">Responde estas 12 preguntas y descubre qué tan sólidas están hoy tus finanzas.</p>
+      <a class="button button-primary hero-button" href="#quiz">Descubrir mi semáforo financiero <Icon name="arrow" /></a>
+      <div class="hero-meta"><span><Icon name="clock" size={16} /> A tu ritmo</span><span><Icon name="check" size={16} /> Sin costo</span><span><Icon name="lock" size={15} /> Respuestas privadas</span></div>
+    </div>
+    <div class="hero-visual">
+      <div class="portrait-wrap"><Image class="hero-portrait" src={portrait} width={620} widths={[400, 620, 900]} sizes="(max-width: 760px) 390px, 480px" alt="Deyanira Mariscal, creadora del quiz y CEO de The Money Bridge" fetchpriority="high" loading="eager" quality={80} /><div class="portrait-caption"><span>DETRÁS DE TU PRÓXIMO PASO</span><strong>Deyanira Mariscal</strong><p>CEO de The Money Bridge</p></div></div>
+      <div class="floating-insight"><span class="insight-symbol"><Icon name="chart" size={23} /></span><div><strong>Más claridad.<br />Mejores decisiones.</strong><span>Empieza por conocerte.</span></div></div>
+      <div class="floating-signal"><div class="signal-dots" aria-hidden="true"><i></i><i></i><i></i></div><span>Descubre tu<br /><strong>semáforo financiero</strong></span></div>
+      <span class="visual-orbit" aria-hidden="true"></span>
+    </div>
+  </div>
+</section>

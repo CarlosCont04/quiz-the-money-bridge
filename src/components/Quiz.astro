@@ -1,0 +1,41 @@
+---
+import quiz from '../../shared/quiz.json';
+import Icon from './Icon.astro';
+const letters = ['A', 'B', 'C'];
+---
+<section id="quiz" class="quiz-section" aria-labelledby="quiz-title">
+  <div class="container quiz-layout">
+    <aside class="quiz-intro">
+      <p class="eyebrow">TU SEMÁFORO FINANCIERO</p><h2 id="quiz-title">El primer paso<br />es saber <span>dónde estás.</span></h2>
+      <p>Aquí no hay respuestas perfectas. Hay un punto de partida para tomar decisiones con más claridad.</p>
+      <ul class="quiz-topics"><li><Icon name="target" /> Claridad y hábitos</li><li><Icon name="shield" /> Ahorro y protección</li><li><Icon name="chart" /> Inversión y futuro</li></ul>
+      <div class="quiz-note"><Icon name="lock" size={18} /><p>Tus respuestas son privadas.<br />Solo tú ves tu resultado en esta pantalla.</p></div>
+    </aside>
+    <div class="quiz-card" id="quiz-card">
+      <noscript><p class="noscript">Activa JavaScript en tu navegador para responder el quiz y consultar tu resultado.</p></noscript>
+      <form id="quiz-form" data-api={`${import.meta.env.BASE_URL}api/`} hidden>
+        <div class="quiz-progress-head"><span id="step-label">PREGUNTA 01 DE 12</span><span id="progress-label">0% completado</span></div>
+        <progress id="quiz-progress" value="0" max="12" aria-label="Preguntas respondidas">0 de 12</progress>
+        <div id="question-steps">
+          {quiz.questions.map((question, index) => <fieldset class="question-step" data-step={index} hidden={index !== 0} aria-describedby={`question-help-${question.id}`}>
+            <legend><span class="question-category">{question.category}</span><span class="question-title" tabindex="-1">{question.title}</span></legend>
+            <p class="question-help" id={`question-help-${question.id}`}>{question.description ?? 'Selecciona la opción que más se parece a ti.'}</p>
+            <div class="answer-options">{question.options.map((option, optionIndex) => <label class="answer-option"><input type="radio" name={`question-${question.id}`} value={letters[optionIndex]} required disabled={index !== 0} /><span class="option-letter" aria-hidden="true">{letters[optionIndex]}</span><span class="option-text">{option}</span><span class="option-check" aria-hidden="true"><Icon name="check" size={15} /></span></label>)}</div>
+          </fieldset>)}
+        </div>
+        <fieldset id="contact-step" hidden disabled>
+          <legend><span class="question-category">EL ÚLTIMO PASO</span><span class="question-title" tabindex="-1">Tu resultado ya está a un paso.</span></legend>
+          <p class="question-help">Registra tus datos para descubrir tu semáforo financiero aquí mismo.</p>
+          <div class="form-field"><label for="full-name">Nombre completo</label><input id="full-name" name="name" type="text" autocomplete="name" placeholder="¿Cómo te llamas?" minlength="2" maxlength="120" required /></div>
+          <div class="form-field"><label for="email">Correo electrónico</label><input id="email" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" maxlength="254" required /></div>
+          <label class="consent"><input type="checkbox" name="consent" required /><span>Acepto que The Money Bridge almacene mis datos y respuestas para registrar mi quiz y generar mi resultado. <button type="button" class="text-button" data-open-privacy>Consultar uso de datos</button></span></label>
+          <div class="honeypot" aria-hidden="true"><label for="website">Dejar vacío</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+        </fieldset>
+        <p id="form-status" role="status" aria-live="polite"></p>
+        <div class="quiz-actions"><button type="button" class="back-button" id="back-button" disabled><span aria-hidden="true">←</span> Anterior</button><button type="submit" class="button button-primary" id="next-button"><span id="next-label">Siguiente</span><Icon name="arrow" size={18} /></button></div>
+        <div class="quiz-bottom"><span class="small-dot"></span> Un paso a la vez también es avanzar.</div>
+      </form>
+      <div id="quiz-complete" hidden><span class="completed-icon"><Icon name="check" size={32} /></span><p class="eyebrow">QUIZ COMPLETADO</p><h3>Ya diste el primer paso.</h3><p>Tu registro y tus respuestas se guardaron correctamente. Puedes volver a consultar tu resultado durante esta visita.</p><button class="button button-primary" type="button" id="reopen-result">Ver mi resultado <Icon name="arrow" /></button><button class="text-button restart-button" type="button" id="restart-quiz">Volver a responder</button></div>
+    </div>
+  </div>
+</section>

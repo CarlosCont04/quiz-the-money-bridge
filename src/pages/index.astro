@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Quiz from '../components/Quiz.astro';
+import ResultDialog from '../components/ResultDialog.astro';
+import Footer from '../components/Footer.astro';
+---
+<Layout><Header /><main id="contenido"><Hero /><HowItWorks /><Quiz /><Footer /></main><ResultDialog /></Layout>
+<script>import '../scripts/quiz';</script>

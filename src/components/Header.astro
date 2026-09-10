@@ -1,0 +1,13 @@
+---
+import Icon from './Icon.astro';
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.webp';
+const base = import.meta.env.BASE_URL;
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href={base} aria-label="The Money Bridge, inicio"><Image src={logo} alt="The Money Bridge" width={155} densities={[1, 2]} loading="eager" /></a>
+    <nav aria-label="Navegación principal"><a href="#como-funciona">Cómo funciona</a><a href="#deyanira">Conoce a Deyanira</a></nav>
+    <a href="#quiz" class="header-cta">Comenzar quiz <Icon name="arrow" size={17} /></a>
+  </div>
+</header>
