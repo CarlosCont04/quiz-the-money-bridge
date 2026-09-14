@@ -6,6 +6,12 @@ const command = process.argv[2];
 const commands = {
   setup: ['scripts/setup-db.php'],
   test: ['tests/quiz.php'],
+  'test-email': ['tests/email.php'],
+  'email-preview': ['scripts/email-preview.php'],
+  'email-test': ['scripts/email-test.php'],
+  'email-retry': ['scripts/email-worker.php', ...process.argv.slice(3)],
+  'email-work': ['scripts/email-worker.php', '--watch'],
+  'email-status': ['scripts/email-status.php'],
   public: ['-S', '127.0.0.1:8080', '-t', 'public'],
   dist: ['-S', '127.0.0.1:8080', '-t', 'dist'],
 };

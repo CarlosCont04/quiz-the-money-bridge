@@ -9,6 +9,7 @@ try {
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE `$name`");
     $pdo->exec(file_get_contents(__DIR__ . '/../database/schema.sql'));
+    $pdo->exec(file_get_contents(__DIR__ . '/../database/email-outbox.sql'));
     echo "Base de datos $name y tablas listas. No se eliminaron registros existentes.\n";
 } catch (Throwable $error) {
     fwrite(STDERR, "No se pudo preparar la base. Verifica MySQL, el puerto y backend/config.local.php. Error: " . $error->getCode() . "\n");

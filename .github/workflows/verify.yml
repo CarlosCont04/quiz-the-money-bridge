@@ -34,8 +34,10 @@ jobs:
           php-version: '8.2'
           extensions: pdo_mysql, mbstring
       - run: npm ci
+      - run: composer install --no-interaction --prefer-dist
       - run: npm run db:setup
       - run: npm test
+      - run: npm run test:email
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

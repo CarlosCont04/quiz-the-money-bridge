@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/backend/http.php';
 require_once dirname(__DIR__, 2) . '/backend/quiz.php';
 require_once dirname(__DIR__, 2) . '/backend/database.php';
+require_once dirname(__DIR__, 2) . '/backend/email/outbox.php';
 
 requireMethod('POST');
 if (strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])) !== 'application/json') {
@@ -62,12 +63,13 @@ if ($existing = $findExisting()) {
 try {
     $pdo->beginTransaction();
     $query = $pdo->prepare('INSERT INTO quiz_submissions (request_id, full_name, email, total_score, result_key, result_json, quiz_version, consent_version, consent_at, payload_hash, session_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, ?)');
-    $query->execute([$submission['requestId'], $submission['name'], $submission['email'], $result['score'], $result['key'], json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), quizDefinition()['version'], 'datos-2026-1', $payloadHash, $sessionHash]);
+    $query->execute([$submission['requestId'], $submission['name'], $submission['email'], $result['score'], $result['key'], json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), quizDefinition()['version'], 'datos-2026-2', $payloadHash, $sessionHash]);
     $submissionId = (int) $pdo->lastInsertId();
     $saveAnswer = $pdo->prepare('INSERT INTO quiz_answers (submission_id, question_id, answer, points) VALUES (?, ?, ?, ?)');
     foreach ($submission['answers'] as $questionId => $answer) {
         $saveAnswer->execute([$submissionId, $questionId, $answer, ['A' => 0, 'B' => 1, 'C' => 2][$answer]]);
     }
+    enqueueQuizEmail($pdo, $submissionId, $submission, $result);
     $pdo->commit();
 } catch (Throwable $error) {
     if ($pdo->inTransaction()) {
@@ -79,4 +81,6 @@ try {
     }
     throw $error;
 }
+// El registro ya está confirmado. Un fallo SMTP queda en cola y no oculta el resultado.
+attemptQuizEmail($pdo, $submissionId);
 jsonResponse(['message' => 'Gracias por responder el quiz', 'result' => $result], 201);

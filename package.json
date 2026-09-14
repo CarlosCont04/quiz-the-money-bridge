@@ -14,6 +14,12 @@
     "start": "node scripts/php.mjs dist",
     "db:setup": "node scripts/php.mjs setup",
     "test": "node scripts/php.mjs test",
+    "test:email": "node scripts/php.mjs test-email",
+    "email:preview": "node scripts/php.mjs email-preview",
+    "email:test": "node scripts/php.mjs email-test",
+    "email:retry": "node scripts/php.mjs email-retry",
+    "email:work": "node scripts/php.mjs email-work",
+    "email:status": "node scripts/php.mjs email-status",
     "test:e2e": "playwright test",
     "check": "astro check"
   },

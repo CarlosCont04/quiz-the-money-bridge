@@ -56,6 +56,12 @@ for (const [answer, score, key, title] of [
     expect(saved.result_key).toBe(key);
     expect(Number(saved.answer_count)).toBe(12);
     expect(Number(saved.answer_score)).toBe(score);
+    const notification = JSON.parse(execFileSync(php, ['tests/db-record.php', 'notification', id], { encoding: 'utf8' }));
+    expect(notification.status).toBe('captured');
+    expect(notification.recipient).toBe('aldoemonterm@gmail.com');
+    const mail = JSON.parse(notification.payload_json);
+    expect(mail.text).toContain(title);
+    expect(mail.text).toContain('12.');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     if (key === 'green') await page.screenshot({ path: `test-results/result-${testInfo.project.name}.png` });
     await page.keyboard.press('Escape');
@@ -87,6 +93,9 @@ test('API enforces CSRF, validation, trusted scoring and idempotency', async ({ 
   expect(retry.status()).toBe(200);
   expect((await retry.json()).result.key).toBe('red');
   expect(Number(record(id).answer_count)).toBe(12);
+  const notification = JSON.parse(execFileSync(php, ['tests/db-record.php', 'notification', id], { encoding: 'utf8' }));
+  expect(Number(notification.attempts)).toBe(1);
+  expect(notification.status).toBe('captured');
   expect((await request.post('api/submit.php', { headers, data: { ...payload, name: 'Otro nombre' } })).status()).toBe(409);
 });
 

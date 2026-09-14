@@ -1,0 +1,7 @@
+{
+  "name": "the-money-bridge/financial-quiz",
+  "description": "Notificaciones SMTP del quiz financiero de The Money Bridge",
+  "type": "project",
+  "require": { "php": ">=8.2", "ext-pdo": "*", "ext-mbstring": "*", "ext-openssl": "*", "phpmailer/phpmailer": "^7.0" },
+  "config": { "sort-packages": true, "allow-plugins": false }
+}

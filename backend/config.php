@@ -17,6 +17,12 @@ function config(): array
             $config['db_' . $key] = $value;
         }
     }
+    foreach (['email_phase', 'email_transport', 'email_recipient', 'email_from', 'email_from_name', 'smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password'] as $key) {
+        $value = getenv(strtoupper($key));
+        if ($value !== false) {
+            $config[$key] = $value;
+        }
+    }
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $config['db_name'])) {
         throw new RuntimeException('Invalid database name');
     }
