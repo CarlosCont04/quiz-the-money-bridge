@@ -20,6 +20,46 @@ La configuración local de este equipo utiliza `127.0.0.1:3308`, base `quiz_mone
 
 `npm run db:setup` crea únicamente la base configurada y las tablas que no existan; conserva los registros existentes. En un servidor con una base ya provisionada, importar `database/schema.sql` y `database/email-outbox.sql` dentro de esa base. En una instalación anterior basta importar la segunda migración o volver a ejecutar `db:setup`. No se envían participaciones históricas automáticamente.
 
+## Después de hacer pull en otro equipo
+
+`git pull` actualiza el código. No copia `backend/config.local.php` (credenciales), `vendor/` (dependencias PHP), `dist/` (sitio compilado) ni la base de datos. Que el correo funcione en el equipo de otra persona no configura SMTP en el tuyo.
+
+Desde la carpeta del proyecto:
+
+```powershell
+git pull
+git lfs pull
+npm.cmd ci
+composer install
+# Crear la configuración privada solo si todavía no existe; no sobrescribirla.
+if (-not (Test-Path 'backend/config.local.php')) {
+    Copy-Item 'backend/config.example.php' 'backend/config.local.php'
+}
+```
+
+Editar **tu propio** `backend/config.local.php`: ajustar el puerto y las credenciales de tu MySQL y configurar `smtp_password` con la contraseña de la cuenta SMTP. En pruebas conservar `email_phase=test`, `email_recipient=aldoemonterm@gmail.com` y `email_transport=smtp`. No subir la contraseña al repositorio ni enviarla junto al diagnóstico. Si defines variables de entorno, tienen prioridad sobre este archivo; una variable `SMTP_PASSWORD` vacía también reemplaza el valor del archivo.
+
+Iniciar MySQL y ejecutar:
+
+```powershell
+npm.cmd run db:setup
+npm.cmd run email:status
+```
+
+`email:status` no envía correos ni muestra contraseñas. Revisa `smtp_password_configured`, `phpmailer_installed`, `database_connected`, `outbox_table_exists` y las instrucciones de `actions`. Un código de salida 1 significa que encontró algo que revisar. Si el diagnóstico está correcto, `npm.cmd run email:test` envía una muestra real a Aldo para comprobar SMTP desde ese equipo.
+
+Para ver los cambios en Apache, **recompilar** después del pull:
+
+```powershell
+$env:PUBLIC_BASE_PATH = '/quiz-the-money-bridge/'
+npm.cmd run build
+Remove-Item Env:PUBLIC_BASE_PATH
+```
+
+Después responder un quiz nuevo en `http://localhost/quiz-the-money-bridge/` y consultar otra vez `npm.cmd run email:status`. Si utilizas `npm run dev`, reiniciar ese proceso después de actualizar. Si hay correos fallidos, corregir la configuración y ejecutar `npm.cmd run email:retry`; usar `email:work` para los reintentos posteriores. Reiniciar un worker que ya estaba activo para que cargue la nueva configuración.
+
+Los archivos SQL crean las tablas: no contienen contraseñas SMTP ni disparadores de correo. El envío nace en `public/api/submit.php` al recibir el formulario. Importar SQL o insertar registros manualmente no genera notificaciones ni reenvía participaciones antiguas.
+
 ## Compilación y Apache de XAMPP
 
 Para probar la versión compilada en la raíz:
@@ -128,7 +168,7 @@ El correo usa tablas e instrucciones CSS en línea para compatibilidad con Gmail
 ```powershell
 npm.cmd run email:preview # Tres HTML y TXT locales, sin enviar.
 npm.cmd run email:test    # Un correo real con datos ficticios, únicamente a Aldo.
-npm.cmd run email:status  # Fase, destinatario, contraseña configurada (sí/no) y conteos.
+npm.cmd run email:status  # Diagnóstico local sin secretos ni envíos; incluye errores y pasos a seguir.
 npm.cmd run email:retry   # Procesar los pendientes cuyo tiempo de espera ya venció.
 npm.cmd run email:work    # Procesar pendientes cada 60 segundos; detener con Ctrl+C.
 ```
