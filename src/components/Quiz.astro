@@ -28,14 +28,14 @@ const letters = ['A', 'B', 'C'];
           <p class="question-help">Registra tus datos para descubrir tu semáforo financiero aquí mismo.</p>
           <div class="form-field"><label for="full-name">Nombre completo</label><input id="full-name" name="name" type="text" autocomplete="name" placeholder="¿Cómo te llamas?" minlength="2" maxlength="120" required /></div>
           <div class="form-field"><label for="email">Correo electrónico</label><input id="email" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" maxlength="254" required /></div>
-          <label class="consent"><input type="checkbox" name="consent" required /><span>Acepto que The Money Bridge almacene mis datos y respuestas para generar mi resultado y envíe mi registro al equipo responsable del quiz para su seguimiento. <button type="button" class="text-button" data-open-privacy>Consultar uso de datos</button></span></label>
+          <label class="consent"><input type="checkbox" name="consent" required /><span>Acepto el envío por correo de mi nombre, correo electrónico, respuestas y resultado a Deyanira Mariscal, de The Money Bridge, para registrar mi participación y dar seguimiento. <button type="button" class="text-button" data-open-privacy>Consultar uso de datos</button></span></label>
           <div class="honeypot" aria-hidden="true"><label for="website">Dejar vacío</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
         </fieldset>
         <p id="form-status" role="status" aria-live="polite"></p>
         <div class="quiz-actions"><button type="button" class="back-button" id="back-button" disabled><span aria-hidden="true">←</span> Anterior</button><button type="submit" class="button button-primary" id="next-button"><span id="next-label">Siguiente</span><Icon name="arrow" size={18} /></button></div>
         <div class="quiz-bottom"><span class="small-dot"></span> Un paso a la vez también es avanzar.</div>
       </form>
-      <div id="quiz-complete" hidden><span class="completed-icon"><Icon name="check" size={32} /></span><p class="eyebrow">QUIZ COMPLETADO</p><h3>Ya diste el primer paso.</h3><p>Tu registro y tus respuestas se guardaron correctamente. Puedes volver a consultar tu resultado durante esta visita.</p><button class="button button-primary" type="button" id="reopen-result">Ver mi resultado <Icon name="arrow" /></button><button class="text-button restart-button" type="button" id="restart-quiz">Volver a responder</button></div>
+      <div id="quiz-complete" hidden><span class="completed-icon"><Icon name="check" size={32} /></span><p class="eyebrow">QUIZ COMPLETADO</p><h3>Ya diste el primer paso.</h3><p>Tu registro y tus respuestas se enviaron para su seguimiento. Puedes volver a consultar tu resultado durante esta visita.</p><button class="button button-primary" type="button" id="reopen-result">Ver mi resultado <Icon name="arrow" /></button><button class="text-button restart-button" type="button" id="restart-quiz">Volver a responder</button></div>
     </div>
   </div>
 </section>

@@ -63,7 +63,7 @@ async function apiRequest(path: string, options: RequestInit = {}): Promise<ApiR
   const response = await fetch(`${api}${path}`, { ...options, credentials: 'same-origin', signal: AbortSignal.timeout(15000), headers: { Accept: 'application/json', ...options.headers } });
   let data: ApiResponse;
   try { data = await response.json(); } catch { throw new Error('El servicio no está disponible. Intenta de nuevo en un momento; tus respuestas siguen aquí.'); }
-  if (!response.ok) throw new Error(data.message || 'No pudimos guardar tu quiz. Intenta de nuevo.');
+  if (!response.ok) throw new Error(data.message || 'No pudimos enviar tu quiz. Intenta de nuevo.');
   return data;
 }
 
@@ -105,7 +105,7 @@ form.addEventListener('submit', async (event) => {
   submitting = true;
   next.disabled = back.disabled = true;
   form.setAttribute('aria-busy', 'true');
-  setStatus('Guardando tus respuestas y preparando tu resultado…', true);
+  setStatus('Enviando tus respuestas y preparando tu resultado…', true);
   const values = { name: nameInput.value.trim(), email: emailInput.value.trim(), consent: element<HTMLInputElement>('[name="consent"]').checked, website: element<HTMLInputElement>('#website').value, answers: answers.map((answer, index) => ({ questionId: index + 1, answer })) };
   const serialized = JSON.stringify(values);
   if (previousPayload && previousPayload !== serialized) requestId = crypto.randomUUID();

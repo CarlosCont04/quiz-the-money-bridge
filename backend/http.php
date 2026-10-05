@@ -29,18 +29,20 @@ function startQuizSession(): void
 {
     $sessionDir = __DIR__ . '/../.runtime/sessions';
     if (!is_dir($sessionDir) && !mkdir($sessionDir, 0700, true) && !is_dir($sessionDir)) {
-        throw new RuntimeException('Session directory unavailable');
+        throw new RuntimeException('Session directory unavailable', 1001);
     }
+    if (!is_writable($sessionDir)) throw new RuntimeException('Session directory not writable', 1002);
+    ini_set('session.save_handler', 'files');
     ini_set('session.use_strict_mode', '1');
     session_save_path($sessionDir);
     session_name('tmb_quiz_session');
     session_set_cookie_params(['httponly' => true, 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'samesite' => 'Lax', 'path' => '/', 'lifetime' => 0]);
-    session_start();
+    if (!session_start()) throw new RuntimeException('Session start failed', 1003);
     $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
 }
 
 set_exception_handler(function (Throwable $error): void {
     // No se registran nombres, correos, respuestas ni credenciales en los logs.
     error_log('TMB quiz API failure: ' . get_class($error) . ' code=' . $error->getCode());
-    jsonResponse(['message' => 'Por ahora no pudimos guardar tu quiz. Intenta de nuevo en un momento; tus respuestas siguen aquí.'], 503);
+    jsonResponse(['message' => 'No pudimos confirmar el envío de tu quiz. Intenta de nuevo en un momento; tus respuestas siguen aquí.'], 503);
 });

@@ -1,13 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-
-const php = process.env.PHP_BINARY || (existsSync('C:/xampp/php/php.exe') ? 'C:/xampp/php/php.exe' : 'php');
-const savedRequests: string[] = [];
-function record(id: string) { return JSON.parse(execFileSync(php, ['tests/db-record.php', 'read', id], { encoding: 'utf8' })); }
-test.afterEach(() => { for (const id of savedRequests.splice(0)) execFileSync(php, ['tests/db-record.php', 'delete', id]); });
 
 test('responsive landing, keyboard navigation and accessibility', async ({ page }, testInfo) => {
   await page.goto('./');
@@ -32,7 +25,7 @@ for (const [answer, score, key, title] of [
   ['B', 12, 'yellow', 'Tu dinero puede dar más'],
   ['C', 24, 'green', 'Tu dinero está listo para crecer'],
 ] as const) {
-  test(`completes ${key}, stores SQL rows and opens accessible result`, async ({ page }, testInfo) => {
+  test(`completes ${key}, confirms EmailJS acceptance and opens accessible result`, async ({ page }, testInfo) => {
     await page.goto('./');
     for (let id = 1; id <= 12; id++) {
       await page.locator(`label:has(input[name="question-${id}"][value="${answer}"])`).click();
@@ -41,27 +34,15 @@ for (const [answer, score, key, title] of [
     await expect(page.locator('#progress-label')).toHaveText('100% completado');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await page.getByLabel('Nombre completo').fill('Prueba automatizada');
-    await page.getByLabel('Correo electrónico').fill(`quiz-test-${randomUUID()}@example.invalid`);
+    await page.getByLabel('Correo electrónico', { exact: true }).fill(`quiz-test-${randomUUID()}@example.invalid`);
     await page.locator('[name="consent"]').check();
     const requestPromise = page.waitForRequest((request) => request.url().endsWith('/api/submit.php'));
     await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
     const request = await requestPromise;
-    const id = request.postDataJSON().requestId;
-    savedRequests.push(id);
+    expect(request.postDataJSON().answers).toHaveLength(12);
     await expect(page.getByRole('dialog', { name: title })).toBeVisible();
     await expect(page.locator('#result-score')).toHaveText(String(score));
     await expect(page.getByText('Gracias por responder el quiz', { exact: true })).toBeVisible();
-    const saved = record(id);
-    expect(Number(saved.total_score)).toBe(score);
-    expect(saved.result_key).toBe(key);
-    expect(Number(saved.answer_count)).toBe(12);
-    expect(Number(saved.answer_score)).toBe(score);
-    const notification = JSON.parse(execFileSync(php, ['tests/db-record.php', 'notification', id], { encoding: 'utf8' }));
-    expect(notification.status).toBe('captured');
-    expect(notification.recipient).toBe('aldoemonterm@gmail.com');
-    const mail = JSON.parse(notification.payload_json);
-    expect(mail.text).toContain(title);
-    expect(mail.text).toContain('12.');
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     if (key === 'green') await page.screenshot({ path: `test-results/result-${testInfo.project.name}.png` });
     await page.keyboard.press('Escape');
@@ -77,7 +58,7 @@ for (const [answer, score, key, title] of [
 }
 
 test('API enforces CSRF, validation, trusted scoring and idempotency', async ({ request }) => {
-  const id = randomUUID(); savedRequests.push(id);
+  const id = randomUUID();
   const payload = { requestId: id, name: 'Prueba automatizada', email: `quiz-test-${id}@example.invalid`, consent: true, score: 24, result: 'green', answers: Array.from({ length: 12 }, (_, i) => ({ questionId: i + 1, answer: 'A' })) };
   expect((await request.get('api/submit.php')).status()).toBe(405);
   expect((await request.post('api/submit.php', { data: payload })).status()).toBe(403);
@@ -92,10 +73,6 @@ test('API enforces CSRF, validation, trusted scoring and idempotency', async ({ 
   const retry = await request.post('api/submit.php', { headers, data: payload });
   expect(retry.status()).toBe(200);
   expect((await retry.json()).result.key).toBe('red');
-  expect(Number(record(id).answer_count)).toBe(12);
-  const notification = JSON.parse(execFileSync(php, ['tests/db-record.php', 'notification', id], { encoding: 'utf8' }));
-  expect(Number(notification.attempts)).toBe(1);
-  expect(notification.status).toBe('captured');
   expect((await request.post('api/submit.php', { headers, data: { ...payload, name: 'Otro nombre' } })).status()).toBe(409);
 });
 
@@ -106,7 +83,7 @@ test('network failure preserves answers and allows retry', async ({ page }) => {
     await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   }
   await page.getByLabel('Nombre completo').fill('Prueba automatizada');
-  await page.getByLabel('Correo electrónico').fill('quiz-test-network@example.invalid');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('quiz-test-network@example.invalid');
   await page.locator('[name="consent"]').check();
   await page.route('**/api/submit.php', (route) => route.abort());
   await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
@@ -115,4 +92,28 @@ test('network failure preserves answers and allows retry', async ({ page }) => {
   await expect(page.getByLabel('Nombre completo')).toHaveValue('Prueba automatizada');
   await page.getByRole('button', { name: 'Anterior' }).click();
   await expect(page.locator('[name="question-12"][value="B"]')).toBeChecked();
+  await page.unroute('**/api/submit.php');
+  await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+  await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Tu dinero puede dar más' })).toBeVisible();
+});
+
+test('provider rejection preserves registration and never announces success', async ({ page }) => {
+  await page.goto('./');
+  for (let id = 1; id <= 12; id++) {
+    await page.locator(`label:has(input[name="question-${id}"][value="B"])`).click();
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+  }
+  await page.getByLabel('Nombre completo').fill('Prueba automatizada');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('quiz-test-provider@example.invalid');
+  await page.locator('[name="consent"]').check();
+  await page.route('**/api/submit.php', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'No pudimos confirmar el envío. Tus respuestas siguen aquí.' }) }));
+  await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
+  await expect(page.locator('#form-status')).toContainText('No pudimos confirmar');
+  await expect(page.locator('#quiz-complete')).not.toBeVisible();
+  await expect(page.locator('#result-dialog')).not.toBeVisible();
+  await expect(page.getByLabel('Correo electrónico', { exact: true })).toHaveValue('quiz-test-provider@example.invalid');
+  await page.unroute('**/api/submit.php');
+  await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Tu dinero puede dar más' })).toBeVisible();
 });

@@ -1,82 +1,50 @@
 <?php
 declare(strict_types=1);
-// Aislar las pruebas aunque la instalación local ya utilice al destinatario del cliente.
-putenv('EMAIL_PHASE=test');
-putenv('EMAIL_RECIPIENT=aldoemonterm@gmail.com');
-putenv('EMAIL_TRANSPORT=capture');
-require_once __DIR__ . '/../backend/database.php';
-require_once __DIR__ . '/../backend/email/outbox.php';
-
+// Credenciales ficticias: el transporte se inyecta y nunca sale a Internet.
+foreach (['SERVICE_ID', 'TEMPLATE_ID', 'PUBLIC_KEY', 'PRIVATE_KEY'] as $key) putenv('EMAILJS_' . $key . '=test_' . strtolower($key));
+putenv('EMAIL_LOGO_URL=');
+require_once __DIR__ . '/../backend/email/mailer.php';
 $checks = 0;
-function mailCheck(bool $ok, string $label): void {
+function mailCheck(bool $condition, string $message): void {
     global $checks;
     $checks++;
-    if (!$ok) { throw new RuntimeException($label); }
+    if (!$condition) throw new RuntimeException($message);
 }
-function mailRejects(callable $operation, string $label): void {
-    try { $operation(); } catch (Throwable) { mailCheck(true, $label); return; }
-    mailCheck(false, $label);
-}
-$settings = array_replace(config(), ['email_phase' => 'test', 'email_transport' => 'capture', 'email_recipient' => QUIZ_TEST_RECIPIENT]);
-mailCheck(quizEmailRecipient($settings) === QUIZ_TEST_RECIPIENT, 'Test recipient');
-mailRejects(fn () => quizEmailRecipient(array_replace($settings, ['email_recipient' => QUIZ_CLIENT_RECIPIENT])), 'Client blocked in test phase');
-mailCheck(quizEmailRecipient(array_replace($settings, ['email_phase' => 'production', 'email_recipient' => QUIZ_CLIENT_RECIPIENT])) === QUIZ_CLIENT_RECIPIENT, 'Explicit production routing');
-
-$sample = ['name' => 'Prueba automatizada <etiqueta> & acentos: María', 'email' => 'quiz-test-template@example.invalid', 'requestId' => 'abcdabcd-1234-4234-8234-abcdef123456'];
+$sample = ['name' => 'José & María "Prueba"', 'email' => 'quiz-test@example.invalid', 'requestId' => '00000000-0000-4000-8000-000000000001'];
 foreach (['A' => 'red', 'B' => 'yellow', 'C' => 'green'] as $letter => $key) {
     $submission = $sample + ['answers' => array_fill(1, 12, $letter)];
     $result = calculateResult($submission['answers']);
-    $report = quizEmailReport($submission, $result, '2026-09-14 18:00:00', true);
-    mailCheck($result['key'] === $key && str_contains($report['html'], reportEscape($result['title'])), 'Matching result');
-    mailCheck(str_contains($report['html'], '&lt;etiqueta&gt; &amp;') && !str_contains($report['html'], '<etiqueta>'), 'Escaped personal data');
-    mailCheck(str_contains($report['text'], $sample['name']) && str_contains($report['text'], $sample['email']), 'Full registration in text');
-    mailCheck(str_contains($report['html'], '12:00 (Ciudad de México)'), 'UTC date converted to Mexico City');
-    mailCheck(str_starts_with($report['subject'], '[PRUEBA]'), 'Test label');
-    mailCheck(strlen($report['html']) < 90000, 'Email HTML below clipping threshold');
+    $content = quizEmailReport($submission, $result, '2026-10-05 18:00:00', false);
+    mailCheck($result['key'] === $key, 'Color esperado');
+    mailCheck(str_contains($content['html'], 'José &amp; María &quot;Prueba&quot;'), 'Datos escapados');
+    mailCheck(str_contains($content['html'], '05/10/2026 · 12:00 (Ciudad de México)'), 'Fecha en México');
+    mailCheck(substr_count($content['html'], 'PREGUNTA ') === 12, 'Doce respuestas');
+    mailCheck(str_contains($content['html'], 'cid:logo.png'), 'Logotipo CID de EmailJS');
+    foreach (['#19255b', '#64c2c8', 'Un nuevo punto', $sample['requestId'], $result['title']] as $text) mailCheck(str_contains($content['html'], $text), 'Plantilla conservada: ' . $text);
     foreach (quizDefinition()['questions'] as $question) {
-        mailCheck(str_contains($report['html'], reportEscape($question['title'])), 'Question included');
-        mailCheck(str_contains($report['html'], reportEscape($question['options'][['A'=>0,'B'=>1,'C'=>2][$letter]])), 'Selected answer included');
+        mailCheck(str_contains($content['html'], reportEscape($question['title'])), 'Pregunta completa');
+        mailCheck(str_contains($content['html'], reportEscape($question['options'][['A' => 0, 'B' => 1, 'C' => 2][$letter]])), 'Respuesta completa');
     }
-    $job = ['submission_id' => 0, 'recipient' => QUIZ_TEST_RECIPIENT, 'message_id' => '<quiz.test@themoneybridge.com.mx>', 'payload_json' => json_encode($report, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)];
-    $mail = quizMailer($settings, $job);
-    $mail->preSend();
-    $mime = $mail->getSentMIMEMessage();
-    mailCheck(str_contains($mime, 'multipart/alternative'), 'HTML and text MIME');
-    mailCheck(str_contains($mime, 'Content-ID: <tmb-logo>') && str_contains($mime, 'image/png'), 'Embedded PNG logo');
-    mailCheck(count($mail->getToAddresses()) === 1 && $mail->getToAddresses()[0][0] === QUIZ_TEST_RECIPIENT, 'Only intended recipient');
-    mailCheck(array_values($mail->getReplyToAddresses())[0][0] === $sample['email'], 'Reply to registrant');
-    mailRejects(fn () => sendQuizEmail(array_replace($settings, ['email_transport' => 'smtp', 'smtp_password' => '']), $job), 'Empty SMTP password rejected');
+    sendQuizEmail($submission, $result, '2026-10-05 18:00:00', false, function (array $payload) use ($sample, $content): array {
+        $params = $payload['template_params'];
+        mailCheck($params['to_email'] === 'deyanira.mariscalc@outlook.com', 'Destinataria fija');
+        mailCheck($params['from_email'] === 'info@themoneybridge.com.mx', 'Remitente fijo');
+        mailCheck($params['reply_to'] === $sample['email'], 'Responder al participante');
+        mailCheck($params['html_content'] === $content['html'], 'Se envía el HTML completo');
+        mailCheck($params['text_content'] === $content['text'], 'Texto alternativo');
+        mailCheck(strlen(json_encode($params)) < 50000, 'Límite de variables');
+        mailCheck($payload['accessToken'] === 'test_private_key', 'Clave privada solo en transporte');
+        return ['status' => 200, 'body' => 'OK'];
+    });
 }
-
-$pdo = database();
-$pdo->beginTransaction();
-try {
-    $submission = $sample + ['answers' => array_fill(1, 12, 'B')];
-    $result = calculateResult($submission['answers']);
-    $insert = $pdo->prepare("INSERT INTO quiz_submissions (request_id,full_name,email,total_score,result_key,result_json,quiz_version,consent_version,consent_at,payload_hash,session_hash) VALUES (?, ?, ?, 12, 'yellow', ?, 'test', 'test', UTC_TIMESTAMP(), ?, ?)");
-    $request = 'test-' . bin2hex(random_bytes(12));
-    $insert->execute([$request,$sample['name'],$sample['email'],json_encode($result),str_repeat('a',64),str_repeat('b',64)]);
-    $id = (int)$pdo->lastInsertId();
-    $submission['requestId'] = $request;
-    enqueueQuizEmail($pdo, $id, $submission, $result);
-    $read = $pdo->prepare('SELECT * FROM quiz_email_outbox WHERE submission_id = ?');
-    $read->execute([$id]); $row = $read->fetch();
-    mailCheck($row['recipient'] === QUIZ_TEST_RECIPIENT && $row['status'] === 'pending', 'Transactional outbox created');
-    $attempts = 0;
-    $fail = function () use (&$attempts): string { $attempts++; throw new RuntimeException('Sensitive fake SMTP response must never be logged'); };
-    mailCheck(deliverQuizEmail($pdo, $id, $fail) === 'failed', 'SMTP failure retained');
-    $read->execute([$id]); $row = $read->fetch();
-    mailCheck($row['last_error_code'] === 'smtp_delivery_failed', 'Error details scrubbed');
-    mailCheck(deliverQuizEmail($pdo, $id, $fail) === 'skipped' && $attempts === 1, 'Backoff prevents immediate retries');
-    $pdo->prepare('UPDATE quiz_email_outbox SET next_attempt_at = UTC_TIMESTAMP() WHERE submission_id = ?')->execute([$id]);
-    $send = function () use (&$attempts, $pdo, $id): string { $attempts++; mailCheck(deliverQuizEmail($pdo, $id, fn () => 'sent') === 'skipped', 'Active lease prevents duplicate sender'); return 'sent'; };
-    mailCheck(deliverQuizEmail($pdo, $id, $send) === 'sent', 'Retry succeeds');
-    mailCheck(deliverQuizEmail($pdo, $id, $send) === 'skipped' && $attempts === 2, 'Delivered email not repeated');
-    $read->execute([$id]); $row = $read->fetch();
-    mailCheck($row['sent_at'] !== null && $row['last_error_code'] === null && $row['lock_token'] === null, 'Successful status finalized');
-    $pdo->prepare("UPDATE quiz_email_outbox SET status = 'sending', locked_at = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 10 MINUTE), lock_token = ? WHERE submission_id = ?")->execute([str_repeat('c',32),$id]);
-    mailCheck(deliverQuizEmail($pdo, $id, fn () => 'captured') === 'captured', 'Abandoned lease recovered');
-} finally {
-    $pdo->rollBack();
+foreach ([[500, 'detalle privado'], [429, 'límite'], [200, 'respuesta inesperada']] as [$status, $body]) {
+    try {
+        sendQuizEmail($submission, $result, '2026-10-05 18:00:00', false, fn () => ['status' => $status, 'body' => $body]);
+        throw new LogicException('Un fallo no puede anunciar éxito.');
+    } catch (EmailJsException $error) {
+        mailCheck($error->httpStatus === $status, 'Estado del proveedor');
+        mailCheck(!str_contains($error->getMessage(), $body), 'Sin detalles del proveedor');
+    }
 }
-echo "$checks comprobaciones de correo correctas. Ningún correo fue enviado a Internet por estas pruebas.\n";
+mailCheck(str_starts_with(quizEmailReport($submission, $result, '2026-10-05 18:00:00', true)['subject'], '[PRUEBA]'), 'Muestra identificada');
+echo "$checks comprobaciones de correo correctas, sin SQL ni correos reales.\n";

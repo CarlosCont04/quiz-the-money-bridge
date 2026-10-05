@@ -5,22 +5,6 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: local-ci-only
-          MYSQL_DATABASE: quiz_money_bridge
-        ports: ['3306:3306']
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -plocal-ci-only"
-          --health-interval=10s --health-timeout=5s --health-retries=10
-    env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_NAME: quiz_money_bridge
-      DB_USER: root
-      DB_PASSWORD: local-ci-only
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,12 +16,11 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo_mysql, mbstring
+          extensions: curl, mbstring
       - run: npm ci
-      - run: composer install --no-interaction --prefer-dist
-      - run: npm run db:setup
       - run: npm test
       - run: npm run test:email
+      - run: npm run test:api
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

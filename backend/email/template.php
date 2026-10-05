@@ -23,13 +23,13 @@ body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}table,td
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;"><tr><td align="center" style="padding:30px 10px;">
 <!--[if mso]><table role="presentation" width="640" align="center"><tr><td><![endif]-->
 <table role="presentation" class="email-shell" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;background-color:#ffffff;border:1px solid #dce5ee;">
-<tr><td class="pad" style="padding:29px 38px;background-color:#ffffff;"><img class="brand-logo" src="cid:tmb-logo" alt="The Money Bridge" width="190" height="79" style="display:block;width:190px;height:79px;"></td></tr>
+<tr><td class="pad" style="padding:29px 38px;background-color:#ffffff;"><img class="brand-logo" src="<?= $e($report['logoSrc']) ?>" alt="The Money Bridge" width="190" height="79" style="display:block;width:190px;height:79px;"></td></tr>
 <tr><td height="4" style="height:4px;line-height:4px;background-color:#64c2c8;">&nbsp;</td></tr>
 <tr><td class="pad" style="padding:35px 38px;background-color:#19255b;">
 <p style="font-size:10px;line-height:17px;font-weight:bold;letter-spacing:2px;color:#9adade;">TU SEMÁFORO FINANCIERO</p>
 <h1 class="email-heading" style="margin:14px 0 13px;font-size:35px;line-height:1.14;letter-spacing:-1px;font-weight:bold;color:#ffffff;">Un nuevo punto<br>de partida.</h1>
 <p style="font-size:14px;line-height:23px;color:#e0e7f3;">Una persona ha completado el quiz. Aquí tienes su registro, su resultado y sus respuestas para dar seguimiento.</p>
-<?php if ($report['isTest']): ?><p style="margin-top:19px;font-size:11px;line-height:18px;color:#c4edf0;">FASE DE PRUEBAS · Envío a la cuenta de verificación.</p><?php endif; ?>
+<?php if ($report['isTest']): ?><p style="margin-top:19px;font-size:11px;line-height:18px;color:#c4edf0;">PARTICIPACIÓN DE PRUEBA · Datos ficticios para verificar la entrega.</p><?php endif; ?>
 </td></tr>
 <tr><td class="pad" style="padding:31px 38px 25px;">
 <h2 style="margin:0 0 17px;font-size:19px;line-height:26px;color:#19255b;">Datos de registro</h2>

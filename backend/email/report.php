@@ -1,13 +1,14 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../quiz.php';
+require_once __DIR__ . '/../config.php';
 
 function reportEscape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/** Snapshot del contenido, independiente de cambios futuros en el quiz. */
+/** Genera el registro, resultado y respuestas con la plantilla HTML original. */
 function quizEmailReport(array $submission, array $result, string $createdAt, bool $isTest): array
 {
     $questions = quizDefinition()['questions'];
@@ -18,10 +19,15 @@ function quizEmailReport(array $submission, array $result, string $createdAt, bo
         $rows[] = ['number' => $question['id'], 'question' => $question['title'], 'context' => $question['description'] ?? '', 'letter' => $letter, 'answer' => $question['options'][$points], 'points' => $points];
     }
     $date = (new DateTimeImmutable($createdAt, new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('America/Mexico_City'));
+    $logoUrl = config()['email_logo_url'];
+    if (!is_string($logoUrl) || ($logoUrl !== '' && (!filter_var($logoUrl, FILTER_VALIDATE_URL) || parse_url($logoUrl, PHP_URL_SCHEME) !== 'https'))) {
+        throw new RuntimeException('La URL del logotipo debe usar HTTPS.', 1009);
+    }
     $report = [
         'name' => $submission['name'], 'email' => $submission['email'], 'requestId' => $submission['requestId'],
         'date' => $date->format('d/m/Y · H:i') . ' (Ciudad de México)',
         'result' => $result, 'rows' => $rows, 'isTest' => $isTest,
+        'logoSrc' => $logoUrl !== '' ? $logoUrl : 'cid:logo.png',
     ];
     $subject = ($isTest ? '[PRUEBA] ' : '') . 'Nuevo quiz financiero | ' . $result['color'] . ' · ' . $result['score'] . '/24';
     $text = "THE MONEY BRIDGE\n" . ($isTest ? "NOTIFICACIÓN DE PRUEBA\n" : '') . "Nuevo quiz financiero\n\n";
