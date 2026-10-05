@@ -6,7 +6,7 @@ DirectoryIndex index.html
   Header always set X-Frame-Options "DENY"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
-<FilesMatch "\.(?:webp|css|js)$">
+<FilesMatch "\.(?:webp|png|css|js)$">
   <IfModule mod_headers.c>
     Header set Cache-Control "public, max-age=86400"
   </IfModule>
