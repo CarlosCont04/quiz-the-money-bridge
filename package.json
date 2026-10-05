@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "test:api": "node --test tests/api.test.mjs",
     "test:hosting": "node --test tests/hosting.test.mjs",
+    "test:hosting:apache": "node --test tests/hosting-apache.test.mjs",
     "check": "astro check"
   },
   "dependencies": {

@@ -1,100 +1,104 @@
-# Desplegar The Money Bridge en HostGator bajo /quiz/
+# HostGator: instalación completa exclusivamente dentro de /quiz/
 
-El despliegue utiliza la misma separación pública/privada que `quiz-tienda`, con una carpeta privada propia para evitar mezclar configuraciones. No se requiere Node, Composer, MySQL ni un worker en HostGator. El servidor ejecuta PHP 8.2 o posterior con `curl`, `mbstring`, sesiones y acceso HTTPS a EmailJS.
+Toda la entrega queda dentro de la única carpeta autorizada **`quiz/`**, incluida **`quiz/tmb-quiz-private/`**. No hay que crear carpetas hermanas, modificar el sitio principal ni escribir fuera de `quiz/`. La carpeta privada contiene backend, configuración y sesiones: se bloquea por HTTP mediante dos `.htaccess`, aunque PHP puede leerla por filesystem.
 
-## 1. Generar y verificar la entrega
+Requiere Apache 2.4 con `mod_rewrite` y soporte de `.htaccess`, PHP 8.2 o posterior con `curl`, `mbstring`, sesiones y acceso HTTPS a EmailJS. No necesita Node, Composer, SQL ni un worker en el hosting.
 
-En el equipo de desarrollo, desde la raíz del proyecto:
+## 1. Generar y verificar el ZIP
+
+Desde el proyecto local:
 
 ```powershell
-npm.cmd ci
-npm.cmd test
-npm.cmd run test:email
-npm.cmd run test:api
 npm.cmd run build:hosting
 npm.cmd run test:hosting
+npm.cmd run test:hosting:apache
 ```
 
-`build:hosting` compila con **`PUBLIC_BASE_PATH=/quiz/`**, verifica las rutas de recursos/API y crea una entrega nueva en **`artifacts/hosting-FECHA/quiz-hosting.zip`**. El archivo **`artifacts/latest-hosting.json`** indica cuál es la última entrega. Las pruebas extraen y sirven el ZIP real bajo `/quiz/`, sin enviar correos.
+El paquete aparece en **`artifacts/hosting-FECHA/quiz-hosting.zip`**; `artifacts/latest-hosting.json` indica la entrega más reciente. La compilación utiliza `/quiz/` para recursos y API. El ZIP contiene directamente **el contenido de quiz/**, sin carpetas contenedoras `public_html/` o `quiz/` y sin claves, datos locales, SQL ni dependencias.
 
-El ZIP incluye todos los archivos públicos, backend, cuestionario, logotipo y estas guías, pero **no contiene claves**, datos de participantes, sesiones locales, SQL, dependencias ni herramientas de prueba. No publicar solamente `dist/`: sus endpoints necesitan los archivos privados.
+`test:hosting` extrae el ZIP en una instalación temporal y comprueba las rutas, la lectura del backend y las sesiones. `test:hosting:apache` inicia un Apache temporal, sin modificar la instalación existente, y comprueba los bloqueos HTTP reales con fixtures sin credenciales. Detecta Apache de XAMPP en Windows y `/usr/sbin/apache2` en Linux; se puede configurar `APACHE_BINARY`, `APACHE_SERVER_ROOT` y `APACHE_MODULES_DIR` si la instalación utiliza otras rutas.
 
-## 2. Preparar las carpetas en cPanel
+## 2. Subir y extraer únicamente en quiz/
 
-Activar PHP 8.2 o posterior y las extensiones necesarias en el selector de PHP del dominio. Mostrar los archivos ocultos en el Administrador de archivos de cPanel para copiar los `.htaccess`.
+En el Administrador de archivos de cPanel, mostrar los archivos ocultos. Subir el ZIP **dentro de la carpeta `quiz/` existente** y extraerlo **en esa misma carpeta**. No crear otra carpeta `quiz/` dentro ni extraerlo en la raíz del sitio. Si se utiliza FTP, copiar todos los archivos del directorio `package/` generado directamente a `quiz/`, incluyendo `.htaccess` y `tmb-quiz-private/`.
 
-La estructura final esperada para un dominio con raíz `public_html` es:
+La estructura final es:
 
 ```text
-/home/USUARIO/
-├── public_html/
-│   └── quiz/
-│       ├── index.html
-│       ├── .htaccess
-│       ├── _astro/
-│       ├── email-assets/logo.png
-│       └── api/
-│           ├── .htaccess
-│           ├── bootstrap.php
-│           ├── private-root.php
-│           ├── session.php
-│           └── submit.php
-└── tmb-quiz-private/
-    ├── .htaccess
-    ├── backend/
-    │   ├── config.example.php
-    │   ├── config.local.php     ← crear solo en el hosting
-    │   ├── config.php
-    │   ├── http.php
-    │   ├── quiz.php
-    │   ├── submission.php
-    │   └── email/
-    ├── shared/quiz.json
-    └── .runtime/sessions/
+quiz/
+├── index.html
+├── .htaccess
+├── _astro/
+├── email-assets/logo.png
+├── api/
+│   ├── .htaccess
+│   ├── bootstrap.php
+│   ├── private-root.php
+│   ├── session.php
+│   └── submit.php
+├── tmb-quiz-private/
+│   ├── .htaccess
+│   ├── backend/
+│   │   ├── config.example.php
+│   │   ├── config.local.php   ← crear después de comprobar el bloqueo HTTP
+│   │   ├── config.php
+│   │   ├── http.php
+│   │   ├── quiz.php
+│   │   ├── submission.php
+│   │   └── email/
+│   ├── shared/quiz.json
+│   └── .runtime/sessions/
+├── INSTRUCCIONES-HOSTING.md
+├── CONFIGURAR-EMAILJS.md
+└── VERSION.json
 ```
 
-Extraer el ZIP en una carpeta de preparación de la cuenta y copiar **el contenido de `public_html/quiz/`** a la carpeta `/quiz/` de la raíz pública del dominio. Copiar **`tmb-quiz-private/`** al directorio de la cuenta, fuera de la raíz pública. No extraer todo dentro de `public_html/quiz`: dejaría el backend en un lugar incorrecto y produciría carpetas públicas anidadas.
+Retirar el ZIP subido de `quiz/` después de extraerlo; conservar la copia local. No subir el `.htaccess` de la raíz del repositorio, que es para XAMPP y redirige a `dist/`: el paquete ya incluye el archivo correcto. Las guías y `VERSION.json` del paquete también se bloquean por HTTP y se consultan localmente o desde el Administrador de archivos.
 
-No subir el `.htaccess` de la raíz del repositorio; sirve para XAMPP y reescribe a `dist/`. El ZIP ya incluye el `.htaccess` adecuado para la página compilada. Si el sitio principal utiliza WordPress u otras reglas, comprobar que los archivos/directorios existentes de `/quiz/` se atiendan antes de su regla general.
+## 3. Comprobar los bloqueos antes de configurar claves
 
-## 3. Ajustar la ruta privada cuando sea necesario
+El `.htaccess` de `quiz/` contiene una regla que bloquea `tmb-quiz-private/` y cualquier subruta. Dentro de la propia carpeta privada, otro `.htaccess` aplica **`Require all denied`**. No eliminar ninguno ni convertirlos en archivos `.htaccess.txt`.
 
-El paquete genera `public_html/quiz/api/private-root.php` con:
+Antes de introducir las claves, comprobar que estas URLs responden **403 Forbidden**:
+
+```text
+https://DOMINIO/quiz/tmb-quiz-private/shared/quiz.json
+https://DOMINIO/quiz/tmb-quiz-private/backend/config.example.php
+https://DOMINIO/quiz/tmb-quiz-private/.runtime/sessions/
+https://DOMINIO/quiz/api/private-root.php
+```
+
+Si una ruta muestra contenido o devuelve 200, no configurar todavía las claves: revisar que los `.htaccess` estén presentes y que el hosting los interprete. Si devuelve 500, revisar en el log PHP/Apache la disponibilidad de `mod_rewrite` y las directivas permitidas. Si el servicio no permite los bloqueos `.htaccess`, se necesita que el proveedor habilite esa protección antes de guardar secretos en esta estructura. No se resuelve publicando la carpeta privada sin protección.
+
+Referencia: [Require all denied en Apache 2.4](https://httpd.apache.org/docs/2.4/mod/mod_authz_core.html#require).
+
+## 4. Ruta del backend y configuración EmailJS
+
+`quiz/api/private-root.php` se genera con esta ruta relativa:
 
 ```php
 <?php
-return dirname(__DIR__, 3) . '/tmb-quiz-private';
+return dirname(__DIR__) . '/tmb-quiz-private';
 ```
 
-Esa ruta corresponde a `/home/USUARIO/public_html/quiz/api` y `/home/USUARIO/tmb-quiz-private`. Si el dominio adicional/subdominio utiliza otra raíz pública, reemplazarla por la ruta absoluta privada real:
+Funciona independientemente de la raíz del dominio: no exige modificar rutas fuera de `quiz/`. No usar una URL HTTP como ruta del backend.
 
-```php
-<?php
-return '/home/USUARIO/tmb-quiz-private';
-```
+Seguir `CONFIGURAR-EMAILJS.md` incluido en el ZIP o `docs/emailjs.md` del repositorio. Crear **`quiz/tmb-quiz-private/backend/config.local.php`** a partir del ejemplo y completar las cuatro claves. Conservar el logotipo CID adjuntando `logo.png` a la plantilla EmailJS, o configurar `email_logo_url` con la URL HTTPS de `/quiz/email-assets/logo.png`.
 
-No usar una URL HTTPS como ruta privada ni colocar la carpeta de claves dentro de `/quiz/`. PHP debe poder leer los archivos de `tmb-quiz-private` y escribir en `.runtime/sessions`. Usar los permisos mínimos compatibles con la cuenta (normalmente carpetas 755 y archivos 644; sesiones/configuración privada más restrictivas si PHP lo admite); no asignar 777.
+PHP debe poder leer el backend y escribir en **`quiz/tmb-quiz-private/.runtime/sessions/`**. Usar los permisos mínimos admitidos por la cuenta; no asignar 777. No hace falta importar SQL, instalar Composer ni crear tareas fuera de `quiz/`.
 
-## 4. Configurar EmailJS en el servidor
+## 5. Verificar el funcionamiento
 
-Seguir la guía `docs/emailjs.md` en el repositorio o el archivo `CONFIGURAR-EMAILJS.md` incluido en el ZIP. Crear **`tmb-quiz-private/backend/config.local.php`** a partir del ejemplo y completar las cuatro claves EmailJS. Configurar el logotipo CID mediante el adjunto estático `logo.png`, o establecer `email_logo_url` con la URL HTTPS de `/quiz/email-assets/logo.png`.
+1. Abrir **`https://DOMINIO/quiz/`** y comprobar estilos, imágenes y navegación.
+2. Abrir **`https://DOMINIO/quiz/api/session.php`**: debe devolver JSON con `csrfToken`, sin avisos PHP ni rutas internas.
+3. Responder un quiz de prueba: el resultado aparece después de la aceptación de EmailJS.
+4. Confirmar en Outlook la recepción en **deyanira.mariscalc@outlook.com**, desde **info@themoneybridge.com.mx**, con registro, resultado, doce respuestas y logotipo.
+5. Repetir en móvil y confirmar de nuevo los bloqueos 403, incluyendo `/quiz/tmb-quiz-private/backend/config.local.php`.
 
-No hace falta crear una base, importar SQL, instalar Composer ni programar una cola de correo. El paquete no contiene el antiguo worker. Si una instalación anterior tenía un proceso o tarea de reintento SMTP, detener esa tarea para que no continúe ejecutando el código anterior.
+Un GET a `submit.php` devuelve 405 porque solo acepta POST. Para fallos de envío, revisar el historial de EmailJS y los códigos del log del hosting; el sitio no muestra secretos ni respuestas completas del proveedor.
 
-## 5. Verificar la instalación
+## Actualizar una instalación
 
-1. Abrir **`https://DOMINIO/quiz/`**: comprobar imágenes, estilos y avance entre preguntas.
-2. Abrir **`https://DOMINIO/quiz/api/session.php`**: debe devolver JSON con `csrfToken`, nunca una ruta de archivos ni un aviso PHP.
-3. Responder un quiz con datos de prueba y consentimiento: debe aparecer el resultado después de la aceptación de EmailJS.
-4. Verificar en Outlook el mensaje recibido por **deyanira.mariscalc@outlook.com**, desde **info@themoneybridge.com.mx**, con registro, resultado, las doce respuestas y el logotipo.
-5. Comprobar escritorio y móvil. La configuración privada debe permanecer fuera de la raíz pública y los accesos directos a `api/private-root.php`/`bootstrap.php` deben devolver 403 con Apache.
+Hacer una copia de la instalación dentro del ámbito permitido o descargarla al equipo local. Extraer la nueva entrega únicamente en `quiz/` y conservar **`quiz/tmb-quiz-private/backend/config.local.php`** y las sesiones: el ZIP no incluye la configuración local. Sustituir juntos API y backend, y verificar los bloqueos otra vez. La ruta nueva de `private-root.php` ya es relativa al interior de `quiz/` y debe reemplazar la versión anterior que apuntaba fuera.
 
-Un GET a `submit.php` devuelve 405: ese endpoint solo acepta POST. Para un envío fallido, revisar los códigos del registro de errores PHP y el historial de EmailJS. El sitio no expone las respuestas completas del proveedor ni las claves.
-
-## Actualizaciones
-
-Guardar una copia de la instalación actual y la configuración privada. Generar otra entrega con `build:hosting`, verificarla y sustituir los archivos públicos y privados del código. Conservar **`config.local.php`**, la ruta privada adaptada de `api/private-root.php` y las sesiones de la instalación. No mezclar PHP de una entrega con backend de otra. El paquete no incluye `config.local.php`, por lo que una copia normal de archivos no lo reemplaza.
-
-Los registros de la antigua base SQL no se modifican ni se migran. Los envíos nuevos quedan en el buzón y son procesados por EmailJS. No hay cola local persistente: el usuario debe reintentar ante errores, y los reintentos confirmados se deduplican únicamente dentro de su sesión vigente.
-
-No se ha publicado automáticamente en la cuenta de HostGator. La entrega requiere configurar las claves y copiar los archivos a la cuenta real siguiendo estos pasos.
+Usar esta entrega nueva, no los ZIP anteriores con `public_html/quiz/` y una carpeta privada hermana. No se ha publicado automáticamente en HostGator. Los registros antiguos de SQL no se modifican y no hay cola persistente de correo; los reintentos se deduplican únicamente dentro de la sesión vigente.

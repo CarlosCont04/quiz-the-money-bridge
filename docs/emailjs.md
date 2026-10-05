@@ -42,7 +42,7 @@ La opción predeterminada conserva el logotipo **incrustado por CID**, como en e
 2. Conservar exactamente el nombre **`logo.png`**: EmailJS usa el nombre del archivo como Content-ID.
 3. Dejar `email_logo_url` vacío. El HTML generado utiliza `src="cid:logo.png"`.
 
-Comprobar que el plan contratado admite adjuntos estáticos. Si no los admite, configurar una URL HTTPS pública en `email_logo_url`, por ejemplo `https://www.themoneybridge.com.mx/quiz/email-assets/logo.png`, ajustando el dominio al real. El paquete HostGator incluye esa imagen en `public_html/quiz/email-assets/logo.png`. Esta alternativa conserva el diseño, pero Outlook puede pedir permiso para descargar imágenes externas.
+Comprobar que el plan contratado admite adjuntos estáticos. Si no los admite, configurar una URL HTTPS pública en `email_logo_url`, por ejemplo `https://www.themoneybridge.com.mx/quiz/email-assets/logo.png`, ajustando el dominio al real. El paquete HostGator incluye esa imagen en `email-assets/logo.png`, que se extrae dentro de `quiz/`. Esta alternativa conserva el diseño, pero Outlook puede pedir permiso para descargar imágenes externas.
 
 No insertar un `data:image/png;base64,...` en el correo: su compatibilidad varía y consume el límite de variables. Las vistas locales sí usan base64 para poder inspeccionar el diseño sin publicar imágenes.
 
@@ -56,7 +56,7 @@ Referencias: [SDK oficial: habilitar aplicaciones de servidor](https://github.co
 
 ## 5. Configurar las cuatro claves
 
-Crear `backend/config.local.php` si no existe, copiando `backend/config.example.php`. En HostGator, el archivo estará en **`/home/USUARIO/tmb-quiz-private/backend/config.local.php`**, fuera del directorio público.
+Crear `backend/config.local.php` si no existe, copiando `backend/config.example.php`. En HostGator, el archivo estará en **`/quiz/tmb-quiz-private/backend/config.local.php`**, dentro de la única carpeta autorizada y protegido por los `.htaccess` del paquete. Antes de introducir claves, verificar que `/quiz/tmb-quiz-private/shared/quiz.json` y `/quiz/tmb-quiz-private/backend/config.example.php` devuelven **403** por HTTP. PHP los lee por filesystem, sin acceder a esas URLs.
 
 ```php
 <?php
@@ -73,7 +73,7 @@ return [
 
 Si ya existe una configuración local, agregar las nuevas claves sin compartir ni sobrescribir sus secretos. Las claves SQL/SMTP antiguas se ignoran. Alternativamente configurar las variables de proceso **`EMAILJS_SERVICE_ID`**, **`EMAILJS_TEMPLATE_ID`**, **`EMAILJS_PUBLIC_KEY`**, **`EMAILJS_PRIVATE_KEY`** y, opcionalmente, `EMAIL_LOGO_URL`. Tienen prioridad sobre el archivo local, incluso si su valor es vacío.
 
-PHP no carga los archivos `.env` de Astro. No colocar estas claves en `PUBLIC_*`, JavaScript, Git ni `public_html`. No es necesario recompilar para cambiar las claves del archivo privado.
+PHP no carga los archivos `.env` de Astro. No colocar estas claves en `PUBLIC_*`, JavaScript, Git ni archivos accesibles por HTTP. En HostGator se guardan únicamente en `/quiz/tmb-quiz-private/backend/config.local.php`, protegido por Apache. No es necesario recompilar para cambiar las claves del archivo privado.
 
 PHP requiere **8.2 o posterior**, `curl`, `mbstring` y acceso HTTPS saliente a `api.emailjs.com:443`. Se verifica el certificado TLS. Ante errores de certificados en XAMPP, configurar un almacén CA válido en `curl.cainfo` del `php.ini` utilizado; no desactivar la verificación TLS.
 

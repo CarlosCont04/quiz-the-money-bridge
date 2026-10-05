@@ -54,9 +54,10 @@ Abrir **http://127.0.0.1:8080/**. Se necesita el servidor PHP para enviar; `astr
 ```powershell
 npm.cmd run build:hosting
 npm.cmd run test:hosting
+npm.cmd run test:hosting:apache
 ```
 
-El paquete completo está en **`artifacts/hosting-FECHA/quiz-hosting.zip`** y su ruta se registra en `artifacts/latest-hosting.json`. Separa `public_html/quiz/` de `tmb-quiz-private/`, fuera de la raíz pública. Incluye backend, contenido y recursos, sin claves ni sesiones locales. Seguir [la guía de HostGator](docs/hosting.md). No publicar solamente `dist/` ni el `.htaccess` del repositorio.
+El paquete completo está en **`artifacts/hosting-FECHA/quiz-hosting.zip`** y su ruta se registra en `artifacts/latest-hosting.json`. Extraer su contenido directamente en **`/quiz/`**, incluyendo **`/quiz/tmb-quiz-private/`** y los `.htaccess`: todo queda dentro de la única carpeta autorizada. Apache bloquea el acceso web al backend privado, aunque PHP puede leerlo para procesar el quiz. Incluye backend, contenido y recursos, sin claves ni sesiones locales. Seguir [la guía de HostGator](docs/hosting.md). No publicar solamente `dist/` ni el `.htaccess` del repositorio; comprobar los bloqueos 403 antes de introducir las claves en el hosting.
 
 ## Correo y plantilla HTML
 
@@ -102,12 +103,13 @@ npm.cmd run test:email
 npm.cmd run test:api
 npm.cmd run build:hosting
 npm.cmd run test:hosting
+npm.cmd run test:hosting:apache
 $env:PLAYWRIGHT_BROWSERS_PATH = Join-Path (Get-Location) '.runtime/browsers'
 npx.cmd playwright install chromium
 npm.cmd run test:e2e
 ```
 
-Las pruebas PHP cubren todos los puntajes, límites, validación, remitente/destinataria y conservación del HTML. Las pruebas API usan un transporte EmailJS simulado y verifican CSRF, errores, cuotas, reintentos y deduplicación. Las pruebas del hosting extraen el ZIP real y validan `/quiz/`, recursos, sesiones privadas y ausencia de secretos/SQL.
+Las pruebas PHP cubren todos los puntajes, límites, validación, remitente/destinataria y conservación del HTML. Las pruebas API usan un transporte EmailJS simulado y verifican CSRF, errores, cuotas, reintentos y deduplicación. Las pruebas del hosting extraen el ZIP real y validan `/quiz/`, recursos, sesiones y ausencia de secretos/SQL. `test:hosting:apache` arranca un Apache temporal con configuración propia y verifica respuestas 403 para backend, claves y sesiones; no modifica la instalación de Apache/XAMPP existente. Requiere Apache 2.4 (`APACHE_BINARY`, y opcionalmente `APACHE_SERVER_ROOT`/`APACHE_MODULES_DIR` si no está en las rutas habituales).
 
 Playwright verifica escritorio/móvil, navegación, resultados, accesibilidad con axe y conservación de datos ante fallos. Arranca su propio servidor con el router de prueba `tests/emailjs-router.php`; las claves son ficticias y no hay correo real. Ese router no se publica ni se utiliza en `npm run dev` normal. GitHub Actions ejecuta estas pruebas sin MySQL ni Composer.
 

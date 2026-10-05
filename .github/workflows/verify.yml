@@ -24,5 +24,7 @@ jobs:
       - run: npm run build
       - run: npm run build:hosting
       - run: npm run test:hosting
+      - run: sudo apt-get update && sudo apt-get install -y apache2
+      - run: npm run test:hosting:apache
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
