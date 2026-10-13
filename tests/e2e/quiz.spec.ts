@@ -20,10 +20,10 @@ test('responsive landing, keyboard navigation and accessibility', async ({ page 
   await expect(first).toBeChecked();
 });
 
-for (const [answer, score, key, title] of [
-  ['A', 0, 'red', 'Tu dinero necesita atención'],
-  ['B', 12, 'yellow', 'Tu dinero puede dar más'],
-  ['C', 24, 'green', 'Tu dinero está listo para crecer'],
+for (const [answer, score, key, title, color, nextStep] of [
+  ['A', 0, 'red', 'Tu dinero necesita atención', 'Rojo', 'Me gustaría recibir orientación para ordenar mis finanzas, fortalecer mi ahorro y revisar mis protecciones.'],
+  ['B', 12, 'yellow', 'Tu dinero puede dar más', 'Amarillo', 'Me gustaría recibir orientación para fortalecer mi estrategia financiera y conectar mi ahorro, protección e inversiones.'],
+  ['C', 24, 'green', 'Tu dinero está listo para crecer', 'Verde', 'Me gustaría conversar sobre cómo optimizar mi estrategia, mejorar mis inversiones y seguir construyendo patrimonio.'],
 ] as const) {
   test(`completes ${key}, confirms EmailJS acceptance and opens accessible result`, async ({ page }, testInfo) => {
     await page.goto('./');
@@ -43,6 +43,24 @@ for (const [answer, score, key, title] of [
     await expect(page.getByRole('dialog', { name: title })).toBeVisible();
     await expect(page.locator('#result-score')).toHaveText(String(score));
     await expect(page.getByText('Gracias por responder el quiz', { exact: true })).toBeVisible();
+    const contact = page.getByRole('link', { name: /Conversar con The Money Bridge por WhatsApp con Deyanira Mariscal/ });
+    await expect(contact).toHaveAttribute('target', '_blank');
+    await expect(contact).toHaveAttribute('rel', 'noopener noreferrer');
+    const whatsapp = new URL((await contact.getAttribute('href'))!);
+    expect(whatsapp.origin).toBe('https://wa.me');
+    expect(whatsapp.pathname).toBe('/525520934484');
+    expect(whatsapp.searchParams.get('text')).toBe(`Hola, Deyanira Mariscal. Respondí el quiz financiero de The Money Bridge y obtuve semáforo ${color} (${score} de 24 puntos). ${nextStep}`);
+    expect(whatsapp.searchParams.get('text')).not.toContain('Prueba automatizada');
+    expect(whatsapp.searchParams.get('text')).not.toContain('@');
+    // Interceptar WhatsApp: validar el clic sin abrir una conversación real.
+    await page.context().route('https://wa.me/**', route => route.fulfill({ contentType: 'text/html', body: '<p>WhatsApp simulado</p>' }));
+    const popupPromise = page.waitForEvent('popup');
+    await contact.click();
+    const popup = await popupPromise;
+    await expect(popup).toHaveURL(whatsapp.href);
+    await popup.close();
+    await page.context().unroute('https://wa.me/**');
+    await expect(page.locator('#result-dialog')).toBeVisible();
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     if (key === 'green') await page.screenshot({ path: `test-results/result-${testInfo.project.name}.png` });
     await page.keyboard.press('Escape');
@@ -50,6 +68,7 @@ for (const [answer, score, key, title] of [
     await expect(page.locator('#reopen-result')).toBeFocused();
     await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
     await expect(page.locator('#result-dialog')).toBeVisible();
+    await expect(contact).toHaveAttribute('href', whatsapp.href);
     await page.getByRole('button', { name: 'Cerrar resultado' }).click();
     await page.getByRole('button', { name: 'Volver a responder' }).click();
     await expect(page.locator('#step-label')).toHaveText('PREGUNTA 01 DE 12');

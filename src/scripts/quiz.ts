@@ -73,6 +73,13 @@ function showResult(result: QuizResult) {
   element('#result-score').textContent = String(result.score);
   element('#result-color').textContent = `Semáforo ${result.color.toLowerCase()}`;
   element('#result-description').textContent = result.description;
+  const nextSteps: Record<QuizResult['key'], string> = {
+    red: 'Me gustaría recibir orientación para ordenar mis finanzas, fortalecer mi ahorro y revisar mis protecciones.',
+    yellow: 'Me gustaría recibir orientación para fortalecer mi estrategia financiera y conectar mi ahorro, protección e inversiones.',
+    green: 'Me gustaría conversar sobre cómo optimizar mi estrategia, mejorar mis inversiones y seguir construyendo patrimonio.',
+  };
+  const message = `Hola, Deyanira Mariscal. Respondí el quiz financiero de The Money Bridge y obtuve semáforo ${result.color} (${result.score} de ${result.maxScore} puntos). ${nextSteps[result.key]}`;
+  element<HTMLAnchorElement>('#result-contact').href = `https://wa.me/525520934484?text=${encodeURIComponent(message)}`;
   const name = element<HTMLInputElement>('#full-name').value.trim();
   element('#result-personal').textContent = `${name}, conocer tu punto de partida ya es avanzar.`;
   resultDialog.showModal();

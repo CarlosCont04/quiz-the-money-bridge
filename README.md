@@ -85,6 +85,8 @@ La aceptación de EmailJS no garantiza la llegada a Inbox; comprobar la recepci�
 
 El resultado aparece después de confirmar la aceptación del envío, con «Gracias por responder el quiz». Se puede cerrar con Escape, reabrir o iniciar otra participación. No se envía correo al visitante ni se le suscribe a publicidad. El consentimiento y «Uso de tus datos» explican el procesamiento por EmailJS y el registro en el buzón del equipo.
 
+El botón «Conversar con The Money Bridge» abre WhatsApp con Deyanira Mariscal en **+52 55 2093 4484**, en una nueva pestaña, conservando el resultado en el sitio. Prepara un mensaje con el color y la puntuación confirmados por PHP: ordenar finanzas para Rojo, fortalecer la estrategia para Amarillo y optimizar inversiones y patrimonio para Verde. No incluye nombre, correo ni respuestas detalladas; el usuario puede editarlo y debe enviarlo manualmente. Utiliza el formato oficial [Click to chat de WhatsApp](https://faq.whatsapp.com/5913398998672934), mediante una URL absoluta compatible con el despliegue en `/quiz/`, sin claves ni cambios fuera de esa carpeta.
+
 ## API y persistencia
 
 - `GET /api/session.php`: crea una sesión con cookie HttpOnly/SameSite y devuelve un token CSRF.
