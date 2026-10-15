@@ -42,6 +42,10 @@ for (const [answer, score, key, title, color, nextStep] of [
     expect(request.postDataJSON().answers).toHaveLength(12);
     await expect(page.getByRole('dialog', { name: title })).toBeVisible();
     await expect(page.locator('#result-score')).toHaveText(String(score));
+    await expect(page.locator('#floating-pig')).toBeVisible();
+    const dialogBounds = await page.locator('#result-dialog').boundingBox();
+    const dockBounds = await page.locator('.mascot-dock').boundingBox();
+    expect(dialogBounds!.y + dialogBounds!.height).toBeLessThanOrEqual(dockBounds!.y);
     await expect(page.getByText('Gracias por responder el quiz', { exact: true })).toBeVisible();
     const contact = page.getByRole('link', { name: /Conversar con The Money Bridge por WhatsApp con Deyanira Mariscal/ });
     await expect(contact).toHaveAttribute('target', '_blank');

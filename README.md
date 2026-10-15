@@ -73,6 +73,14 @@ npm.cmd run email:test    # ENVÍO REAL de una muestra ficticia a la plantilla c
 
 La aceptación de EmailJS no garantiza la llegada a Inbox; comprobar la recepción y el diseño en Outlook. Si el proveedor falla, el sitio informa del error y conserva las respuestas en memoria para que el usuario reintente. No hay cola persistente ni cron/worker. Recargar o cerrar la página descarta el registro que aún no se ha enviado.
 
+## Detalles visuales y cerdito flotante
+
+Los títulos combinan el azul marino original con rosa frambuesa `#b83f73` para texto y rosa suave `#ed8db3` para subrayados. No se modifican los colores del semáforo ni el diseño del correo.
+
+`src/components/FloatingPig.astro` incorpora `src/assets/cerdito.png`: una copia con fondo transparente de la imagen proporcionada por el cliente. Se preparó con la herramienta integrada de la habilidad `imagegen`, sin modificar el JPG original. Instrucción utilizada: «Quitar únicamente el fondo negro exterior; preservar diseño, proporciones, tonos rosas, brillos, ojo, fosas nasales y contornos negros; sin redibujar, recortar ni añadir elementos; PNG transparente».
+
+La franja inferior reserva 76 px en escritorio y 60 px en móvil, más el área segura del dispositivo. La página se desplaza en `.site-viewport`; ni contenido, ni controles, ni ventanas emergentes quedan detrás del cerdito. El fondo de los diálogos termina por encima de la franja para mantenerlo visible. La decoración no intercepta clics ni foco, se oculta a lectores de pantalla y su breve animación de entrada (4,8 s) se desactiva con movimiento reducido. Astro genera WebP de 96/192 px y las rutas del paquete siguen dentro de `/quiz/`.
+
 ## Contenido y cálculo
 
 `shared/quiz.json` es la fuente única de las doce preguntas y resultados. PHP calcula A = 0, B = 1, C = 2, con máximo 24. El puntaje/color enviado por el navegador se ignora.

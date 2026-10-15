@@ -89,6 +89,8 @@ test('la página usa /quiz/api/ y sus recursos públicos existen', async () => {
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.match(html, /data-api="\/quiz\/api\/"/);
+  const mascot = html.match(/<img\b[^>]*\bid="floating-pig"[^>]*>/)?.[0] || '';
+  assert.match(mascot, /src="\/quiz\/_astro\/cerdito\.[^"]+\.webp"/);
   assert.match(html, /id="result-contact"[^>]*href="https:\/\/wa\.me\/525520934484"[^>]*target="_blank"/);
   const assets = [...html.matchAll(/(?:src|href)="(\/quiz\/_astro\/[^\"]+)"/g)];
   assert.ok(assets.length >= 3);

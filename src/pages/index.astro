@@ -6,6 +6,7 @@ import HowItWorks from '../components/HowItWorks.astro';
 import Quiz from '../components/Quiz.astro';
 import ResultDialog from '../components/ResultDialog.astro';
 import Footer from '../components/Footer.astro';
+import FloatingPig from '../components/FloatingPig.astro';
 ---
-<Layout><Header /><main id="contenido"><Hero /><HowItWorks /><Quiz /><Footer /></main><ResultDialog /></Layout>
+<Layout><div class="site-viewport" id="site-viewport"><Header /><main id="contenido"><Hero /><HowItWorks /><Quiz /><Footer /></main></div><ResultDialog /><FloatingPig /></Layout>
 <script>import '../scripts/quiz';</script>

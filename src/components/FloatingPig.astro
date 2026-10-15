@@ -1,0 +1,11 @@
+---
+import { Image } from 'astro:assets';
+import pig from '../assets/cerdito.png';
+---
+<!-- Decoración sin controles: su espacio se reserva fuera del área desplazable. -->
+<div class="mascot-dock" aria-hidden="true">
+  <div class="container mascot-dock-inner">
+    <span class="mascot-caption">THE MONEY BRIDGE<span>Tu semáforo financiero</span></span>
+    <Image id="floating-pig" src={pig} alt="" width={96} widths={[96, 192]} sizes="(max-width: 760px) 64px, 80px" loading="eager" decoding="async" quality={85} draggable="false" />
+  </div>
+</div>
