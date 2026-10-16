@@ -2,6 +2,12 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { randomUUID } from 'node:crypto';
 
+const adviceDescriptions = {
+  red: 'Agenda tu asesoría con Deyanira para identificar tus prioridades, ordenar tus finanzas y empezar a construir una base más sólida.',
+  yellow: 'Agenda tu asesoría con Deyanira para fortalecer tus bases y conectar tu ahorro, protección e inversiones en una estrategia integral.',
+  green: 'Agenda tu asesoría con Deyanira para revisar cómo optimizar tu estrategia, mejorar tus inversiones y seguir construyendo patrimonio.',
+};
+
 test('responsive landing, keyboard navigation and accessibility', async ({ page }, testInfo) => {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('usando bien');
@@ -48,6 +54,9 @@ for (const [answer, score, key, title, color, nextStep] of [
     expect(dialogBounds!.y + dialogBounds!.height).toBeLessThanOrEqual(dockBounds!.y);
     await expect(page.getByText('Gracias por responder el quiz', { exact: true })).toBeVisible();
     const contact = page.getByRole('link', { name: /Conversar con The Money Bridge por WhatsApp con Deyanira Mariscal/ });
+    await expect(page.getByRole('heading', { name: 'El siguiente paso es tu asesoría financiera.', exact: true })).toBeVisible();
+    await expect(page.locator('#result-advice-description')).toHaveText(adviceDescriptions[key]);
+    expect(await contact.evaluate(link => link.previousElementSibling?.classList.contains('result-advice'))).toBeTruthy();
     await expect(contact).toHaveAttribute('target', '_blank');
     await expect(contact).toHaveAttribute('rel', 'noopener noreferrer');
     const whatsapp = new URL((await contact.getAttribute('href'))!);
@@ -73,6 +82,7 @@ for (const [answer, score, key, title, color, nextStep] of [
     await page.getByRole('button', { name: 'Ver mi resultado', exact: true }).click();
     await expect(page.locator('#result-dialog')).toBeVisible();
     await expect(contact).toHaveAttribute('href', whatsapp.href);
+    await expect(page.locator('#result-advice-description')).toHaveText(adviceDescriptions[key]);
     await page.getByRole('button', { name: 'Cerrar resultado' }).click();
     await page.getByRole('button', { name: 'Volver a responder' }).click();
     await expect(page.locator('#step-label')).toHaveText('PREGUNTA 01 DE 12');

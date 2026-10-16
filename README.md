@@ -95,6 +95,8 @@ El resultado aparece después de confirmar la aceptación del envío, con «Grac
 
 El botón «Conversar con The Money Bridge» abre WhatsApp con Deyanira Mariscal en **+52 55 2093 4484**, en una nueva pestaña, conservando el resultado en el sitio. Prepara un mensaje con el color y la puntuación confirmados por PHP: ordenar finanzas para Rojo, fortalecer la estrategia para Amarillo y optimizar inversiones y patrimonio para Verde. No incluye nombre, correo ni respuestas detalladas; el usuario puede editarlo y debe enviarlo manualmente. Utiliza el formato oficial [Click to chat de WhatsApp](https://faq.whatsapp.com/5913398998672934), mediante una URL absoluta compatible con el despliegue en `/quiz/`, sin claves ni cambios fuera de esa carpeta.
 
+Justo antes del botón, el resultado muestra «El siguiente paso es tu asesoría financiera.» con una invitación adaptada al semáforo confirmado por PHP: identificar prioridades y ordenar las finanzas en Rojo, fortalecer las bases e integrar ahorro/protección/inversiones en Amarillo, y revisar la optimización de la estrategia y el patrimonio en Verde. Este CTA se actualiza al mostrar o reabrir el resultado, conserva los acentos rosas y no modifica el correo ni el enlace de WhatsApp.
+
 ## API y persistencia
 
 - `GET /api/session.php`: crea una sesión con cookie HttpOnly/SameSite y devuelve un token CSRF.

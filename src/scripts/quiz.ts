@@ -73,6 +73,12 @@ function showResult(result: QuizResult) {
   element('#result-score').textContent = String(result.score);
   element('#result-color').textContent = `Semáforo ${result.color.toLowerCase()}`;
   element('#result-description').textContent = result.description;
+  const adviceDescriptions: Record<QuizResult['key'], string> = {
+    red: 'Agenda tu asesoría con Deyanira para identificar tus prioridades, ordenar tus finanzas y empezar a construir una base más sólida.',
+    yellow: 'Agenda tu asesoría con Deyanira para fortalecer tus bases y conectar tu ahorro, protección e inversiones en una estrategia integral.',
+    green: 'Agenda tu asesoría con Deyanira para revisar cómo optimizar tu estrategia, mejorar tus inversiones y seguir construyendo patrimonio.',
+  };
+  element('#result-advice-description').textContent = adviceDescriptions[result.key];
   const nextSteps: Record<QuizResult['key'], string> = {
     red: 'Me gustaría recibir orientación para ordenar mis finanzas, fortalecer mi ahorro y revisar mis protecciones.',
     yellow: 'Me gustaría recibir orientación para fortalecer mi estrategia financiera y conectar mi ahorro, protección e inversiones.',

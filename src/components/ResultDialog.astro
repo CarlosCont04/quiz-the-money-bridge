@@ -3,7 +3,23 @@ import Icon from './Icon.astro';
 ---
 <dialog id="result-dialog" class="result-dialog" aria-labelledby="result-title" aria-describedby="result-description">
   <button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar resultado"><Icon name="close" /></button>
-  <div class="result-body"><p class="eyebrow">TU SEMÁFORO FINANCIERO</p><div class="result-signal" aria-hidden="true"><i data-light="red"></i><i data-light="yellow"></i><i data-light="green"></i></div><span id="result-color" class="result-color"></span><h2 id="result-title" tabindex="-1"></h2><p class="score"><strong id="result-score"></strong><span>de 24 puntos</span></p><p id="result-description"></p><div class="result-thanks"><Icon name="check" /><div><strong>Gracias por responder el quiz</strong><span id="result-personal"></span></div></div><a id="result-contact" class="button button-primary" href="https://wa.me/525520934484" target="_blank" rel="noopener noreferrer" aria-label="Conversar con The Money Bridge por WhatsApp con Deyanira Mariscal (se abre en una nueva pestaña)">Conversar con The Money Bridge <Icon name="arrow" size={17} /></a><button class="text-button" type="button" data-close-dialog>Volver a mi quiz</button><p class="result-footnote">WhatsApp abrirá un mensaje con tu resultado. Puedes editarlo antes de enviarlo.</p><p class="result-footnote">Una guía para conocer tu situación actual, creada por Deyanira Mariscal.</p></div>
+  <div class="result-body">
+    <p class="eyebrow">TU SEMÁFORO FINANCIERO</p>
+    <div class="result-signal" aria-hidden="true"><i data-light="red"></i><i data-light="yellow"></i><i data-light="green"></i></div>
+    <span id="result-color" class="result-color"></span>
+    <h2 id="result-title" tabindex="-1"></h2>
+    <p class="score"><strong id="result-score"></strong><span>de 24 puntos</span></p>
+    <p id="result-description"></p>
+    <div class="result-thanks"><Icon name="check" /><div><strong>Gracias por responder el quiz</strong><span id="result-personal"></span></div></div>
+    <div class="result-advice" aria-labelledby="result-advice-title">
+      <h3 id="result-advice-title">El siguiente paso es tu asesoría financiera.</h3>
+      <p id="result-advice-description"></p>
+    </div>
+    <a id="result-contact" class="button button-primary" href="https://wa.me/525520934484" target="_blank" rel="noopener noreferrer" aria-label="Conversar con The Money Bridge por WhatsApp con Deyanira Mariscal (se abre en una nueva pestaña)">Conversar con The Money Bridge <Icon name="arrow" size={17} /></a>
+    <button class="text-button" type="button" data-close-dialog>Volver a mi quiz</button>
+    <p class="result-footnote">WhatsApp abrirá un mensaje con tu resultado. Puedes editarlo antes de enviarlo.</p>
+    <p class="result-footnote">Una guía para conocer tu situación actual, creada por Deyanira Mariscal.</p>
+  </div>
 </dialog>
 <dialog id="privacy-dialog" class="privacy-dialog" aria-labelledby="privacy-title">
   <button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar uso de datos"><Icon name="close" /></button>

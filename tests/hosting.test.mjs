@@ -92,6 +92,8 @@ test('la página usa /quiz/api/ y sus recursos públicos existen', async () => {
   const mascot = html.match(/<img\b[^>]*\bid="floating-pig"[^>]*>/)?.[0] || '';
   assert.match(mascot, /src="\/quiz\/_astro\/cerdito\.[^"]+\.webp"/);
   assert.match(html, /id="result-contact"[^>]*href="https:\/\/wa\.me\/525520934484"[^>]*target="_blank"/);
+  assert.match(html, /id="result-advice-title">El siguiente paso es tu asesoría financiera\.<\/h3>/);
+  assert.match(html, /id="result-advice-description"><\/p>\s*<\/div>\s*<a id="result-contact"/);
   const assets = [...html.matchAll(/(?:src|href)="(\/quiz\/_astro\/[^\"]+)"/g)];
   assert.ok(assets.length >= 3);
   for (const [, path] of assets) {
